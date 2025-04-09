@@ -13,12 +13,58 @@ import { FontAwesome5, MaterialIcons, Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 
+const statusStyles = {
+  Approved: {
+    backgroundColor: '#C8E6C9',
+    textColor: '#2E7D32',
+  },
+  Pending: {
+    backgroundColor: '#FFF9C4',
+    textColor: '#F9A825',
+  },
+  Rejected: {
+    backgroundColor: '#FFCDD2',
+    textColor: '#C62828',
+  },
+};
+
+const ApplicationCard = ({ name, form, date, bio, status }) => {
+  const badgeStyle = statusStyles[status] || {
+    backgroundColor: '#E0E0E0',
+    textColor: '#424242',
+  };
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.name}>{name}</Text>
+        <View style={[styles.statusBadge, { backgroundColor: badgeStyle.backgroundColor }]}>
+          <Text style={[styles.statusText, { color: badgeStyle.textColor }]}>{status}</Text>
+        </View>
+      </View>
+
+      <Text style={styles.label}>
+        Form: <Text style={styles.value}>{form}</Text>
+      </Text>
+      <Text style={styles.label}>
+        Date: <Text style={styles.value}>{date}</Text>
+      </Text>
+
+      {/* Bio Sub-Box */}
+      <View style={styles.bioContainer}>
+        <Text style={styles.bioTitle}>Application Bio</Text>
+        <Text style={styles.bioContent}>{bio}</Text>
+      </View>
+    </View>
+  );
+};
+
+
 const FormSubmissionsScreen = () => {
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterVisible, setFilterVisible] = useState(false);
-  const [sortOrder, setSortOrder] = useState('desc');
   const [formTypeOpen, setFormTypeOpen] = useState(false);
   const [formTypeValue, setFormTypeValue] = useState(null);
   const [formTypeItems, setFormTypeItems] = useState([
@@ -64,7 +110,7 @@ const FormSubmissionsScreen = () => {
   const [showEndPicker, setShowEndPicker] = useState(false);
 
   const handleSearch = () => {
-    console.log('Searching for:', searchQuery);
+    console.log('Search:', searchQuery);
   };
 
   const handleResetFilters = () => {
@@ -78,7 +124,29 @@ const FormSubmissionsScreen = () => {
     setEndDate(new Date());
   };
 
-  const mockData = []; // Replace with actual filtered data
+  const mockData = [
+    {
+      name: 'Ravi Kumar',
+      form: 'Basic Details',
+      date: '2025-04-05',
+      bio: 'Farmer from Village A, applied for Basic Details scheme.',
+      status: 'Approved',
+    },
+    {
+      name: 'Sita Devi',
+      form: 'Land Details',
+      date: '2025-04-06',
+      bio: 'Owns 2 hectares, applied for irrigation support.',
+      status: 'Pending',
+    },
+    {
+      name: 'Mohan Das',
+      form: 'Bank Details',
+      date: '2025-04-07',
+      bio: 'Requested bank update for subsidy transfer.',
+      status: 'Rejected',
+    },
+  ];
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -93,7 +161,7 @@ const FormSubmissionsScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar */}
+      {/* Search */}
       <View style={styles.searchContainer}>
         <FontAwesome5 name="search" size={16} color="#1B5E20" style={styles.searchIcon} />
         <TextInput
@@ -108,7 +176,7 @@ const FormSubmissionsScreen = () => {
         Search
       </Button>
 
-      {/* Filter Section */}
+      {/* Filters */}
       {filterVisible && (
         <View style={styles.filterSection}>
           <DropDownPicker
@@ -120,7 +188,6 @@ const FormSubmissionsScreen = () => {
             setItems={setFormTypeItems}
             placeholder="Form Type"
             style={styles.dropdown}
-            dropDownContainerStyle={styles.dropdownBox}
           />
           <DropDownPicker
             open={panchayatOpen}
@@ -131,7 +198,6 @@ const FormSubmissionsScreen = () => {
             setItems={setPanchayatItems}
             placeholder="Panchayat"
             style={styles.dropdown}
-            dropDownContainerStyle={styles.dropdownBox}
           />
           <DropDownPicker
             open={blockOpen}
@@ -142,7 +208,6 @@ const FormSubmissionsScreen = () => {
             setItems={setBlockItems}
             placeholder="Block"
             style={styles.dropdown}
-            dropDownContainerStyle={styles.dropdownBox}
           />
           <DropDownPicker
             open={hamletOpen}
@@ -153,7 +218,6 @@ const FormSubmissionsScreen = () => {
             setItems={setHamletItems}
             placeholder="Hamlet"
             style={styles.dropdown}
-            dropDownContainerStyle={styles.dropdownBox}
           />
           <DropDownPicker
             open={genderOpen}
@@ -164,7 +228,6 @@ const FormSubmissionsScreen = () => {
             setItems={setGenderItems}
             placeholder="Gender"
             style={styles.dropdown}
-            dropDownContainerStyle={styles.dropdownBox}
           />
           <DropDownPicker
             open={statusOpen}
@@ -175,10 +238,8 @@ const FormSubmissionsScreen = () => {
             setItems={setStatusItems}
             placeholder="Status"
             style={styles.dropdown}
-            dropDownContainerStyle={styles.dropdownBox}
           />
-
-          {/* Date Range */}
+          {/* Dates */}
           <View style={styles.dateContainer}>
             <TouchableOpacity onPress={() => setShowStartPicker(true)} style={styles.dateButton}>
               <Text style={styles.dateText}>Start: {startDate.toDateString()}</Text>
@@ -192,9 +253,9 @@ const FormSubmissionsScreen = () => {
               value={startDate}
               mode="date"
               display="default"
-              onChange={(event, selectedDate) => {
+              onChange={(e, date) => {
                 setShowStartPicker(false);
-                if (selectedDate) setStartDate(selectedDate);
+                if (date) setStartDate(date);
               }}
             />
           )}
@@ -203,23 +264,28 @@ const FormSubmissionsScreen = () => {
               value={endDate}
               mode="date"
               display="default"
-              onChange={(event, selectedDate) => {
+              onChange={(e, date) => {
                 setShowEndPicker(false);
-                if (selectedDate) setEndDate(selectedDate);
+                if (date) setEndDate(date);
               }}
             />
           )}
+          <TouchableOpacity onPress={handleResetFilters} style={styles.resetButton}>
+  <Text style={styles.resetButtonText}>Reset Filters</Text>
+</TouchableOpacity>
 
-          <Button mode="outlined" onPress={handleResetFilters} style={styles.resetButton}>
-            Reset Filters
-          </Button>
         </View>
       )}
 
-      {/* Result Count / Message */}
-      <Text style={styles.resultCount}>
+      {/* Result Message */}
+      <Text style={{ textAlign: 'center', marginVertical: 10 }}>
         {mockData.length > 0 ? `${mockData.length} forms found` : 'No forms found'}
       </Text>
+
+      {/* Application Cards */}
+      {mockData.map((item, index) => (
+        <ApplicationCard key={index} {...item} />
+      ))}
     </ScrollView>
   );
 };
@@ -268,45 +334,106 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   searchButton: {
-    marginBottom: 16,
-    backgroundColor: '#1B5E20',
+    marginBottom: 10,
+    backgroundColor: '#2E7D32',
   },
   filterSection: {
-    marginBottom: 20,
+    marginBottom: 16,
     gap: 10,
   },
   dropdown: {
-    marginBottom: 8,
-    borderColor: '#1B5E20',
-  },
-  dropdownBox: {
-    borderColor: '#1B5E20',
+    borderColor: '#ccc',
+    marginBottom: 10,
+    zIndex: 1000,
   },
   dateContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: 10,
+    marginBottom: 10,
   },
   dateButton: {
     padding: 10,
     borderWidth: 1,
     borderColor: '#1B5E20',
-    borderRadius: 8,
+    borderRadius: 6,
     flex: 1,
-    marginHorizontal: 4,
+    marginRight: 5,
   },
   dateText: {
     color: '#1B5E20',
-    textAlign: 'center',
+    fontWeight: 'bold',
   },
   resetButton: {
-    borderColor: '#1B5E20',
+    borderWidth: 1,
+    borderColor: '#4CAF50', // or any color matching your theme
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
     marginTop: 10,
+    backgroundColor: '#2E7D32',
   },
-  resultCount: {
-    marginTop: 16,
+  resetButtonText: {
+    color: '#F5F5F5',
     fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
+    fontSize: 16,
   },
-});          
+  
+  
+  card: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontWeight: '600',
+  },
+  label: {
+    fontWeight: '500',
+    color: '#555',
+    marginTop: 4,
+  },
+  value: {
+    fontWeight: '400',
+    color: '#333',
+  },
+  bioContainer: {
+    marginTop: 12,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 10,
+    padding: 10,
+  },
+  bioTitle: {
+    fontWeight: '600',
+    color: '#1B5E20',
+    marginBottom: 4,
+  },
+  bioContent: {
+    color: '#4E4E4E',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  
+});
